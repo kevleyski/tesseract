@@ -140,11 +140,15 @@ class GenericVector {
 
   // Add a callback to be called to delete the elements when the array took
   // their ownership.
-  void set_clear_callback(TessCallback1<T>* cb);
+  void set_clear_callback(TessCallback1<T>* cb) {
+    clear_cb_ = cb;
+  }
 
   // Add a callback to be called to compare the elements when needed (contains,
   // get_id, ...)
-  void set_compare_callback(TessResultCallback2<bool, T const&, T const&>* cb);
+  void set_compare_callback(TessResultCallback2<bool, T const&, T const&>* cb) {
+    compare_cb_ = cb;
+  }
 
   // Clear the array, calling the clear callback function if any.
   // All the owned callbacks are also deleted.
@@ -280,33 +284,6 @@ class GenericVector {
     }
     // last_write is the index of a valid data cell, so add 1.
     size_used_ = last_write + 1;
-  }
-
-  // Compact the vector by deleting elements for which delete_cb returns
-  // true. delete_cb is a permanent callback and will be deleted.
-  void compact(TessResultCallback1<bool, int>* delete_cb) {
-    int new_size = 0;
-    int old_index = 0;
-    // Until the callback returns true, the elements stay the same.
-    while (old_index < size_used_ && !delete_cb->Run(old_index++)) {
-      ++new_size;
-    }
-    // Now just copy anything else that gets false from delete_cb.
-    for (; old_index < size_used_; ++old_index) {
-      if (!delete_cb->Run(old_index)) {
-        data_[new_size++] = data_[old_index];
-      }
-    }
-    size_used_ = new_size;
-    delete delete_cb;
-  }
-
-  T dot_product(const GenericVector<T>& other) const {
-    T result = static_cast<T>(0);
-    for (int i = std::min(size_used_, other.size_used_) - 1; i >= 0; --i) {
-      result += data_[i] * other.data_[i];
-    }
-    return result;
   }
 
   // Returns the index of what would be the target_index_th item in the array
@@ -899,21 +876,6 @@ GenericVector<T>& GenericVector<T>::operator=(const GenericVector& other) {
     this->operator+=(other);
   }
   return *this;
-}
-
-// Add a callback to be called to delete the elements when the array took
-// their ownership.
-template <typename T>
-void GenericVector<T>::set_clear_callback(TessCallback1<T>* cb) {
-  clear_cb_ = cb;
-}
-
-// Add a callback to be called to delete the elements when the array took
-// their ownership.
-template <typename T>
-void GenericVector<T>::set_compare_callback(
-    TessResultCallback2<bool, T const&, T const&>* cb) {
-  compare_cb_ = cb;
 }
 
 // Clear the array, calling the callback function if any.

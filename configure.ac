@@ -165,16 +165,6 @@ AC_ARG_ENABLE([legacy],
 AC_MSG_RESULT([$enable_legacy])
 AM_CONDITIONAL([DISABLED_LEGACY_ENGINE], test "$enable_legacy" = "no")
 
-# check whether to build embedded version
-AC_MSG_CHECKING([--enable-embedded argument])
-AC_ARG_ENABLE([embedded],
-    AS_HELP_STRING([--enable-embedded], [enable embedded build [default=no]]))
-AC_MSG_RESULT([$enable_embedded])
-AM_CONDITIONAL([EMBEDDED], [test "$enable_embedded" = "yes"])
-if test "$enable_embedded" = "yes"; then
-  AM_CPPFLAGS="-DEMBEDDED $AM_CPPFLAGS"
-fi
-
 # check whether to build OpenMP support
 AC_OPENMP
 
@@ -441,12 +431,10 @@ AM_CONDITIONAL([ENABLE_TRAINING], true)
 PKG_CHECK_MODULES([ICU_UC], [icu-uc >= 52.1], [have_icu_uc=true], [have_icu_uc=false])
 PKG_CHECK_MODULES([ICU_I18N], [icu-i18n >= 52.1], [have_icu_i18n=true], [have_icu_i18n=false])
 if !($have_icu_uc && $have_icu_i18n); then
-  if !($have_icu); then
-        AC_MSG_WARN([icu 52.1 or higher is required, but was not found.])
-        AC_MSG_WARN([Training tools WILL NOT be built.])
-        AC_MSG_WARN([Try to install libicu-devel package.])
-        AM_CONDITIONAL([ENABLE_TRAINING], false)
-  fi
+  AC_MSG_WARN([icu 52.1 or higher is required, but was not found.])
+  AC_MSG_WARN([Training tools WILL NOT be built.])
+  AC_MSG_WARN([Try to install libicu-devel package.])
+  AM_CONDITIONAL([ENABLE_TRAINING], false)
 else
   CPPFLAGS="$CPPFLAGS $ICU_UC_CFLAGS $ICU_I18N_CFLAGS"
 fi
